@@ -4,7 +4,18 @@ Atualizador do pacote **R O X** que roda **no próprio Nintendo Switch** (homebr
 `.nro`), no mesmo espírito do atualizador do CNX: baixa o pacote, apaga o que o
 servidor manda apagar, extrai o novo e reinicia no hekate.
 
-Status: **aguardando aprovação** — nenhum código de produção escrito.
+Status: plano aprovado; **F0 (spike) em andamento** — F0.4 travou no reboot
+no primeiro teste; versão 0.0.2 (trata Mariko) aguardando teste e `spike.log`.
+
+## Repositórios
+
+| Repo | App | Papel |
+| --- | --- | --- |
+| `mathst/ultranx-nx` (este) | Switch, C/libnx | **Principal**: usuário só instala o `.nro`; verifica e aplica a atualização no console |
+| `mathst/ultranx` | PC, Python/PyQt | **Auxiliar**: instala o `.nro` no cartão, atualiza offline, recupera o cartão |
+| `mathst/rox-pack` | — | Releases do pacote: partes `.zip` + `manifest.json` lidos pelos dois apps |
+
+Tarefas F2.H, F2.I, F2.J e F2.K são executadas no repositório `mathst/ultranx`.
 
 ## Objetivo
 
@@ -17,7 +28,7 @@ O servidor (manifest v2) passa a ser a fonte de **quais pacotes instalar** e
 
 ## Escopo
 
-- Homebrew `homebrew/` em C11 + libnx, interface de console de texto.
+- Homebrew (este repositório, `mathst/ultranx-nx`) em C11 + libnx, interface de console de texto.
 - Manifest v2 (contrato compartilhado com o app de PC) — ver `specs/data-model.md`.
 - Fluxo: manifest → escolha → plano de limpeza → download **de tudo** para
   staging → verificação SHA-256 → limpeza → extração → `packetVersion.txt` →
@@ -73,7 +84,7 @@ O servidor (manifest v2) passa a ser a fonte de **quais pacotes instalar** e
 ## Estrutura de pastas (contrato de propriedade)
 
 ```
-homebrew/
+ultranx-nx/ (raiz deste repositório)
   Makefile                 # alvo .nro (devkitA64) e alvo `test` (gcc host)
   include/ultranx/         # contratos (F1) — só a fundação altera
   src/core/                # C puro, sem libnx: manifest, plan, paths, version
@@ -107,7 +118,7 @@ Saída: anotações em `specs/architecture.md` (tempos, versões das portlibs).
 
 | ID | Tarefa | Critério de aceite |
 | --- | --- | --- |
-| F1.1 | Scaffold `homebrew/`, Makefile com alvos `nro` e `test` | `make` e `make test` passam no CI |
+| F1.1 | Scaffold na raiz, Makefile com alvos `nro` e `test` | `make` e `make test` passam no CI |
 | F1.2 | Headers de contrato em `include/ultranx/` (`manifest.h`, `plan.h`, `paths.h`, `version.h`, `net.h`, `archive.h`, `system.h`, `fs.h`, `ui.h`, `errors.h`) + `build_config.h` (URL fixa — já criado); `plan.h` recebe listagem injetada (`UnxListDirFn`) para testar no host | compilam; assinaturas batem com `specs/architecture.md` |
 | F1.3 | `docs/manifest.v2.schema.json` + exemplos v1/v2 | validados por `jsonschema` no CI |
 | F1.4 | CI `.github/workflows/homebrew.yml`: job host (testes+cobertura) e job `devkitpro/devkita64` (build `.nro`); tag `homebrew-v*` publica release | ambos verdes |
@@ -125,8 +136,10 @@ Saída: anotações em `specs/architecture.md` (tempos, versões das portlibs).
 | F2.G | Telas | `src/ui/*.c` | 7 telas de `ui.md` navegáveis com dados falsos |
 | F2.H | App de PC lê manifest v2 | `src/ultranx/core/version_inspector.py`, `sanitizer.py`, `config.py`, testes | v1 continua funcionando; `cleanup` do servidor respeita whitelist local; pytest verde |
 | F2.I | Gerador de release | `tools/make_release.py`, `tests/test_make_release.py` | fatia em ≤ 1,9 GB, cada parte zip válido; lê `--cleanup cleanup.json`; gera `manifest.json` (passa no schema) e `packetVersion.txt` |
+| F2.J | PC instala o `.nro` no cartão | `src/ultranx/core/nx_installer.py` + UI, testes | botão baixa o `.nro` da release mais recente de `mathst/ultranx-nx`, valida e grava em `switch/ultranx-nx/`; não toca em nada mais |
+| F2.K | PC recupera cartão após falha no console | `src/ultranx/core/recovery.py` + UI, testes | detecta `ultranx-nx/staging/APPLYING`; retoma a partir das partes já verificadas (`state.json`) ou refaz a instalação completa |
 
-F2.A–C dependem só de F1. F2.D–G dependem de F0+F1. F2.H e F2.I dependem só de F1.3.
+F2.A–C dependem só de F1. F2.D–G dependem de F0+F1. F2.H e F2.I dependem só de F1.3. F2.J depende da primeira release do `.nro` (F4.3); F2.K depende de F2.H e do formato de staging congelado em F3.1.
 
 ### F3 — Integração (sequencial)
 

@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  spike:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      # Portlibs (switch-curl, switch-zlib) já vêm na imagem; pkg.devkitpro.org
+      # devolve 403 para runners de CI, então não há dkp-pacman aqui.
+      - name: Build spike
+        run: make -C spike
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: ultranx-spike
+          path: spike/ultranx-spike.nro
+          if-no-files-found: error

@@ -1,6 +1,6 @@
 # Segurança
 
-Escopo: homebrew `homebrew/` (console) e a parte do app de PC que passa a
+Escopo: homebrew `mathst/ultranx-nx` (console) e a parte do app de PC que passa a
 consumir `cleanup` do manifest v2 (F2.H). O ativo a proteger é o **dado
 irrecuperável do usuário no SD** (saves, `emummc`, `*.keys`, backups do JKSV) e
 a **capacidade do console de dar boot**.

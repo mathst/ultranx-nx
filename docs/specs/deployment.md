@@ -4,7 +4,7 @@ Dois artefatos distintos, com ciclos de release independentes:
 
 | Artefato | Onde vive | Tag | Quem consome |
 | --- | --- | --- | --- |
-| Homebrew `ultranx-nx.nro` | este repositório (`homebrew/`) | `homebrew-vX.Y.Z` | usuário instala uma vez; depois vem dentro do pacote |
+| Homebrew `ultranx-nx.nro` | este repositório (`mathst/ultranx-nx`) | `vX.Y.Z` | usuário instala uma vez; depois vem dentro do pacote |
 | Pacote R O X (partes `.zip` + `manifest.json`) | repositório público separado `mathst/rox-pack` | `vX.Y.Z` | homebrew e app de PC, via manifest |
 
 O app de PC mantém o fluxo atual (`build.yml`, tags `v*`). A tag do homebrew
@@ -51,7 +51,7 @@ pelo Makefile e comparada com `min_updater` do manifest.
 
 ## CI (`.github/workflows/homebrew.yml`)
 
-Disparo: `push`/`pull_request` com `paths: ["homebrew/**", "tools/**",
+Disparo: `push`/`pull_request` com `paths: ["**", "tools/**",
 ".github/workflows/homebrew.yml"]`, mais `workflow_dispatch` e tags
 `homebrew-v*`. `permissions: contents: read` por padrão (igual ao `ci.yml`).
 `timeout-minutes` em todo job, pelo mesmo motivo registrado no `ci.yml`: um
@@ -61,9 +61,9 @@ mirror pendurado não pode segurar o job por horas.
 
 1. `make -C homebrew test COVERAGE=1`: compila `src/core/` + `tests/` com gcc
    `-std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined --coverage`.
-2. `gcovr -r homebrew --filter homebrew/src/core --fail-under-line 80`.
+2. `gcovr -r . --filter src/core --fail-under-line 80`.
 3. Validação de schema: `python -m jsonschema` de
-   `homebrew/docs/manifest.v2.schema.json` contra os exemplos v1/v2.
+   `docs/manifest.v2.schema.json` contra os exemplos v1/v2.
 4. `pytest tests/test_make_release.py` (gerador de release).
 5. Upload de `coverage.xml` como artefato.
 
@@ -72,7 +72,7 @@ mirror pendurado não pode segurar o job por horas.
 1. `dkp-pacman -Syu --noconfirm switch-curl switch-jansson switch-zlib`,
    com `timeout-minutes: 6` no passo. As versões instaladas são impressas
    (`dkp-pacman -Q`) e comparadas às anotadas na F0 de `architecture.md`.
-2. `make -C homebrew` gera `homebrew/ultranx-nx.nro`.
+2. `make` gera `ultranx-nx.nro`.
 3. Checagem: o `.nro` existe e o tamanho fica abaixo de 8 MB (sem romfs; um
    tamanho fora disso indica asset embutido por engano).
 4. `actions/upload-artifact@v4` com `name: ultranx-nx`,
